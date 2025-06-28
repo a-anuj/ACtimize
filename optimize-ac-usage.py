@@ -101,12 +101,6 @@ def mlModel(
     return f"The predicted electricity cost is ₹{prediction[0]:.2f}"
 
 
-# In[ ]:
-
-
-
-
-
 # In[9]:
 
 
@@ -116,51 +110,58 @@ def chat_llm(state: State):
     result = tool_calling_llm.invoke(state["messages"])
     return {"messages": state["messages"] + [result]}  # <-- Append new response
 
+def solution_llm(state: State):
+    prediction_msg = state["messages"][-1]  # ML tool result
+    user_msg = state["messages"][0].content  # original user message
+
+    analysis_prompt = f"""
+    Based on the user's AC usage:
+    {user_msg}
+
+    The predicted electricity cost is:
+    {prediction_msg.content}
+
+    Give a brief explanation and suggest one or two ways to optimize their AC usage and reduce cost.
+    Like basically what temperature to keep in what amount of time to optimize the usage
+    """
+
+    result = llm.invoke([HumanMessage(content=analysis_prompt)])
+    return {"messages": state["messages"] + [result]}
+
+
 
 # In[ ]:
-
-
-def decide_next(state):
-    if "tool_call" in state:  # example condillm_with_tooltion
-        return "tool"
-    return "__end__"
-
-
-# In[20]:
 
 
 graph_builder = StateGraph(State)
 graph_builder.add_node("llm_with_tool", chat_llm)
 graph_builder.add_node("tool", ToolNode(tools))
-
+graph_builder.add_node("advice_agent",solution_llm)
 graph_builder.add_edge(START, "llm_with_tool")
 
 
-
-# tool always returns to llm_with_tool (never ends)
 graph_builder.add_edge("llm_with_tool", "tool")
-
-# Remove this — redundant and might allow accidental END without condition
-# graph_builder.add_edge("llm_with_tool", END)
+graph_builder.add_edge("tool","advice_agent")
+graph_builder.add_edge("advice_agent",END)
 
 graph = graph_builder.compile()
 
 
-# In[21]:
+# In[11]:
 
 
 from IPython.display import Image,display
 display(Image(graph.get_graph().draw_mermaid_png()))
 
 
-# In[22]:
+# In[12]:
 
 
 state = {
     "messages": [
         {
             "role": "user",
-            "content": "I use my AC for 6 hours a day at 24 degrees. My room is 120 sq ft, the outside temperature is 35°C, and it's a 1.5 ton AC. Can you tell me the electricity cost?"
+            "content": "My AC runs for 9 hours daily at 20 degrees. The room is 180 sq ft, outside temp is 38°C, and it’s a 2 ton AC. How much will I have to pay for electricity? Also, is this setup okay or am I wasting power?"
         }
     ]
 }
@@ -168,7 +169,7 @@ response = graph.invoke(state)
 print(response["messages"])
 
 
-# In[14]:
+# In[13]:
 
 
 for m in response["messages"]:

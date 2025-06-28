@@ -1,23 +1,6 @@
 import pandas as pd
-
-df = pd.read_csv("chillwise_ac_usage_dataset.csv")
-print(df.head())
-
-
 from sklearn.metrics import r2_score
-
-
 from xgboost import XGBRegressor
-
-x_train = df.drop("Electricity_cost",axis=1)
-y_train = df["Electricity_cost"]
-
-xgb = XGBRegressor()
-
-xgb.fit(x_train,y_train)
-
-
-
 from typing import Annotated
 from typing_extensions import TypedDict
 from langchain_core.messages import HumanMessage 
@@ -27,22 +10,32 @@ from langchain_groq import ChatGroq
 from langgraph.prebuilt import ToolNode,tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from langchain.tools import tool
+from langchain.tools import tool
+import os
+from dotenv import load_dotenv
+load_dotenv()
+from IPython.display import Image,display
+import streamlit as st
 
 
+df = pd.read_csv("chillwise_ac_usage_dataset.csv")
+print(df.head())
+x_train = df.drop("Electricity_cost",axis=1)
+y_train = df["Electricity_cost"]
+
+xgb = XGBRegressor()
+
+xgb.fit(x_train,y_train)
 
 class State(TypedDict):
     messages:Annotated[list,add_messages]
 
 
-import os
-from dotenv import load_dotenv
-load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 llm = ChatGroq(model="llama3-70b-8192")
 
 
 
-from langchain.tools import tool
 
 @tool
 def mlModel(
@@ -119,7 +112,6 @@ graph = graph_builder.compile()
 
 
 
-from IPython.display import Image,display
 display(Image(graph.get_graph().draw_mermaid_png()))
 
 
@@ -135,14 +127,8 @@ state = {
 response = graph.invoke(state)
 print(response["messages"])
 
-
-
-
 for m in response["messages"]:
     m.pretty_print()
 
 
-
-
-
-
+st.header("ACtimize")

@@ -18,15 +18,6 @@ from IPython.display import Image,display
 import streamlit as st
 
 
-df = pd.read_csv("chillwise_ac_usage_dataset.csv")
-print(df.head())
-x_train = df.drop("Electricity_cost",axis=1)
-y_train = df["Electricity_cost"]
-
-xgb = XGBRegressor()
-
-xgb.fit(x_train,y_train)
-
 class State(TypedDict):
     messages:Annotated[list,add_messages]
 
@@ -35,7 +26,15 @@ api_key = os.getenv("GROQ_API_KEY")
 llm = ChatGroq(model="llama3-70b-8192")
 
 
+st.header("ACtimize")
+df = pd.read_csv("chillwise_ac_usage_dataset.csv")
+print(df.head())
+x_train = df.drop("Electricity_cost",axis=1)
+y_train = df["Electricity_cost"]
 
+xgb = XGBRegressor()
+
+xgb.fit(x_train,y_train)
 
 @tool
 def mlModel(
@@ -66,15 +65,11 @@ def mlModel(
         "AC_type": [AC_type]
     })
     prediction = xgb.predict(df_test)
-    return f"The predicted electricity cost is ₹{prediction[0]:.2f}"
+    return f"The predicted electricity cost is ₹{prediction[0]:.2f}"    
 
-
-
-tools = [mlModel]
-tool_calling_llm = llm.bind_tools(tools)
 def chat_llm(state: State):
-    result = tool_calling_llm.invoke(state["messages"])
-    return {"messages": state["messages"] + [result]}  # <-- Append new response
+            result = tool_calling_llm.invoke(state["messages"])
+            return {"messages": state["messages"] + [result]}  # <-- Append new response
 
 def solution_llm(state: State):
     prediction_msg = state["messages"][-1]  # ML tool result
@@ -97,6 +92,10 @@ def solution_llm(state: State):
 
 
 
+tools = [mlModel]
+tool_calling_llm = llm.bind_tools(tools)
+
+
 graph_builder = StateGraph(State)
 graph_builder.add_node("llm_with_tool", chat_llm)
 graph_builder.add_node("tool", ToolNode(tools))
@@ -112,23 +111,17 @@ graph = graph_builder.compile()
 
 
 
-display(Image(graph.get_graph().draw_mermaid_png()))
-
-
-
-state = {
-    "messages": [
-        {
-            "role": "user",
-            "content": "My AC runs for 9 hours daily at 20 degrees. The room is 180 sq ft, outside temp is 38°C, and it’s a 2 ton AC. How much will I have to pay for electricity? Also, is this setup okay or am I wasting power?"
+with st.form("actimize-form"):
+    user_input = st.text_input("Enter the prompt : ")
+    submit = st.form_submit_button("Optimize")
+    if submit:
+        state = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ]
         }
-    ]
-}
-response = graph.invoke(state)
-print(response["messages"])
-
-for m in response["messages"]:
-    m.pretty_print()
-
-
-st.header("ACtimize")
+        response = graph.invoke(state)
+        st.write(response["messages"])

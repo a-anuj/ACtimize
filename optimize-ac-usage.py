@@ -1,26 +1,10 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd
-
-
-# In[2]:
-
 
 df = pd.read_csv("chillwise_ac_usage_dataset.csv")
 print(df.head())
 
 
-# In[3]:
-
-
 from sklearn.metrics import r2_score
-
-
-# In[4]:
 
 
 from xgboost import XGBRegressor
@@ -32,8 +16,6 @@ xgb = XGBRegressor()
 
 xgb.fit(x_train,y_train)
 
-
-# In[5]:
 
 
 from typing import Annotated
@@ -47,14 +29,9 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain.tools import tool
 
 
-# In[6]:
-
 
 class State(TypedDict):
     messages:Annotated[list,add_messages]
-
-
-# In[7]:
 
 
 import os
@@ -63,8 +40,6 @@ load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 llm = ChatGroq(model="llama3-70b-8192")
 
-
-# In[8]:
 
 
 from langchain.tools import tool
@@ -101,8 +76,6 @@ def mlModel(
     return f"The predicted electricity cost is ₹{prediction[0]:.2f}"
 
 
-# In[9]:
-
 
 tools = [mlModel]
 tool_calling_llm = llm.bind_tools(tools)
@@ -130,8 +103,6 @@ def solution_llm(state: State):
 
 
 
-# In[ ]:
-
 
 graph_builder = StateGraph(State)
 graph_builder.add_node("llm_with_tool", chat_llm)
@@ -147,14 +118,10 @@ graph_builder.add_edge("advice_agent",END)
 graph = graph_builder.compile()
 
 
-# In[11]:
-
 
 from IPython.display import Image,display
 display(Image(graph.get_graph().draw_mermaid_png()))
 
-
-# In[12]:
 
 
 state = {
@@ -169,20 +136,12 @@ response = graph.invoke(state)
 print(response["messages"])
 
 
-# In[13]:
 
 
 for m in response["messages"]:
     m.pretty_print()
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
 
 
 

@@ -124,4 +124,4 @@ with st.form("actimize-form"):
             ]
         }
         response = graph.invoke(state)
-        st.write(response["messages"])
+        st.write(response["messages"][-1].content)

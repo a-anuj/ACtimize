@@ -1,10 +1,18 @@
 import { useState } from 'react'
+import './Navbar.css'
 
-function Navbar(){
+
+export default function Navbar(){
     return(
         <>
-            <h1>ACtimize</h1>
+            <nav className="navbar">
+            <h2 className="logo">MyApp</h2>
+            <ul className="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+            </nav>
         </>
     )
 }
-export default Navbar

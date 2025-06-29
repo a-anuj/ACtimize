@@ -16,6 +16,12 @@ from dotenv import load_dotenv
 load_dotenv()
 from IPython.display import Image,display
 import streamlit as st
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import re
+
+app = Flask(__name__)
+CORS(app)  
 
 
 class State(TypedDict):
@@ -111,17 +117,45 @@ graph = graph_builder.compile()
 
 
 
-with st.form("actimize-form"):
-    user_input = st.text_input("Enter the prompt : ")
-    submit = st.form_submit_button("Optimize")
-    if submit:
+
+        
+@app.route("/predict",methods=["POST"])
+def predict():
+    try:
+        data = request.get_json()
+        user_input = data.get("prompt")
+
         state = {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": user_input
+                "messages": [
+                        {
+                            "role": "user",
+                            "content": user_input
+                        }
+                    ]
                 }
-            ]
-        }
+
         response = graph.invoke(state)
-        st.write(response["messages"][-1].content)
+
+        final_response = response["messages"][-1].content
+        split_sections = re.split(r"\*\*Suggestions to Optimize AC Usage and Reduce Cost:\*\*", final_response)
+
+        explanation = ""
+        suggestions = ""
+
+        if len(split_sections) == 2:
+            explanation = re.sub(r"\*\*Explanation:\*\*", "", split_sections[0]).strip()
+            suggestions = split_sections[1].strip()
+        else:
+            explanation = final_response.strip()  # fallback
+
+        return jsonify({
+            "explanation": explanation,
+            "suggestions": suggestions
+        })
+
+    except Exception as e:
+         print("Error : ",e)
+         return jsonify({"error : ",e}), 500
+    
+if __name__ == "__main__":
+    app.run(debug=True)

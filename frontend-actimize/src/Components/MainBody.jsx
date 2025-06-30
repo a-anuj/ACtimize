@@ -9,7 +9,7 @@ function App() {
   const [roomSize, setRoomSize] = useState(120);
   const [outsideTemp, setOutsideTemp] = useState(35);
   const [acType, setAcType] = useState(1.5);
-  const [response, setResponse] = useState({ explanation:"",suggestions:"" });
+  const [response, setResponse] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +18,7 @@ function App() {
 
     try {
       const res = await axios.post('http://localhost:5000/predict', { prompt });
-      setResponse(res.data);
+      setResponse(res.data.response);
     } catch (err) {
       console.error('API error:', err);
       setResponse('Something went wrong. Try again.');
@@ -55,21 +55,9 @@ function App() {
         <button type="submit">🔍 Predict</button>
       </form>
 
-      {response.explanation && (
+      {response && (
         <div>
-            <h3>📘 Explanation:</h3>
-            <p>{response.explanation}</p>
-        </div>
-        )}
-
-      {response.suggestions && (
-        <div>
-            <h3>✅ Suggestions:</h3>
-            <ul>
-            {response.suggestions.split(/\d\./).filter(Boolean).map((point, idx) => (
-                <li key={idx}>{point.trim()}</li>
-            ))}
-            </ul>
+            <div dangerouslySetInnerHTML={{ __html: response }} />
         </div>
         )}
     </div>

@@ -32,7 +32,6 @@ api_key = os.getenv("GROQ_API_KEY")
 llm = ChatGroq(model="llama3-70b-8192")
 
 
-st.header("ACtimize")
 df = pd.read_csv("chillwise_ac_usage_dataset.csv")
 print(df.head())
 x_train = df.drop("Electricity_cost",axis=1)
@@ -89,7 +88,8 @@ def solution_llm(state: State):
     {prediction_msg.content}
 
     Give a brief explanation and suggest one or two ways to optimize their AC usage and reduce cost.
-    Like basically what temperature to keep in what amount of time to optimize the usage
+    Like basically what temperature to keep in what amount of time to optimize the usage. 
+    Also Important thing is give it in html format
     """
 
     result = llm.invoke([HumanMessage(content=analysis_prompt)])
@@ -137,20 +137,9 @@ def predict():
         response = graph.invoke(state)
 
         final_response = response["messages"][-1].content
-        split_sections = re.split(r"\*\*Suggestions to Optimize AC Usage and Reduce Cost:\*\*", final_response)
-
-        explanation = ""
-        suggestions = ""
-
-        if len(split_sections) == 2:
-            explanation = re.sub(r"\*\*Explanation:\*\*", "", split_sections[0]).strip()
-            suggestions = split_sections[1].strip()
-        else:
-            explanation = final_response.strip()  # fallback
 
         return jsonify({
-            "explanation": explanation,
-            "suggestions": suggestions
+            "response":final_response
         })
 
     except Exception as e:

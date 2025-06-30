@@ -89,7 +89,7 @@ def solution_llm(state: State):
 
     Give a brief explanation and suggest one or two ways to optimize their AC usage and reduce cost.
     Like basically what temperature to keep in what amount of time to optimize the usage. 
-    Also Important thing is give it in html format
+    Also Important thing is give HTML format with ample amount of br tags in between and dont specify that you have given in html format  
     """
 
     result = llm.invoke([HumanMessage(content=analysis_prompt)])
@@ -114,9 +114,6 @@ graph_builder.add_edge("tool","advice_agent")
 graph_builder.add_edge("advice_agent",END)
 
 graph = graph_builder.compile()
-
-
-
 
         
 @app.route("/predict",methods=["POST"])
